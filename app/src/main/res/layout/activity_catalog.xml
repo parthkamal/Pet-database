@@ -23,4 +23,16 @@
         app:backgroundTint="@color/orange"
         tools:layout_editor_absoluteX="322dp"
         tools:layout_editor_absoluteY="639dp" />
+
+    <TextView
+        android:id="@+id/text_view_pet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:textColor="@android:color/black" />
 </RelativeLayout>
