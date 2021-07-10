@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -48,10 +49,7 @@ public class CatalogActivity extends AppCompatActivity {
 
     //this method will be called to represent the database of the app
     private void displayDatabaseInfo() {
-        //since it is a read operation so we require a readable database
-        //for update,create,and delete operation we require a writable database.
-        SQLiteDatabase db = mDbHelper.getReadableDatabase();
-        //on create method of the the open helper class gets executed if the database is not created
+        // we are directly using the content resolver
 
         //this is a projection of the table or in other word the attribute of the base columns
         String[] projection = {
@@ -62,13 +60,11 @@ public class CatalogActivity extends AppCompatActivity {
                 PetContract.PetEntry.COLUMN_PET_WEIGHT };
 
         //for now we are not using the content providers and directly accessing the database by a raw query.
-        Cursor cursor = db.query(
-                PetContract.PetEntry.TABLE_NAME,   // The table to query
-                projection,            // The columns to return
-                null,                  // The columns for the WHERE clause
-                null,                  // The values for the WHERE clause
-                null,                  // Don't group the rows
-                null,                  // Don't filter by row groups
+        Cursor cursor = getContentResolver().query(
+                PetContract.PetEntry.CONTENT_URI,   // content Uri for the query
+                projection,            // the projection of the query   basically the columns to return
+                null,
+                null,
                 null);                   // The sort order
 
         TextView displayView = (TextView) findViewById(R.id.text_view_pet);
@@ -125,21 +121,7 @@ public class CatalogActivity extends AppCompatActivity {
         values.put(PetContract.PetEntry.COLUMN_PET_GENDER, PetContract.PetEntry.GENDER_MALE);
         values.put(PetContract.PetEntry.COLUMN_PET_WEIGHT, 7);
 
-        // Insert a new row for Toto in the database, returning the ID of that new row.
-        // The first argument for db.insert() is the pets table name.
-        // The second argument provides the name of a column in which the framework
-        // can insert NULL in the event that the ContentValues is empty (if
-        // this is set to "null", then the framework will not insert a row when
-        // there are no values).
-        // The third argument is the ContentValues object containing the info for Toto.
-        long newRowId = db.insert(PetContract.PetEntry.TABLE_NAME, null, values);
-        if (newRowId == -1) {
-            // If the row ID is -1, then there was an error with insertion.
-            Toast.makeText(this, "Error with saving pet", Toast.LENGTH_SHORT).show();
-        } else {
-            // Otherwise, the insertion was successful and we can display a toast with the row ID.
-            Toast.makeText(this, "Entered Dummy Data in the App " + newRowId, Toast.LENGTH_SHORT).show();
-        }
+        Uri newUri = getContentResolver().insert(PetContract.PetEntry.CONTENT_URI, values);
     }
 
 
