@@ -57,6 +57,7 @@ public class PetContentProvider extends ContentProvider {
                 break;
             default: throw new IllegalArgumentException("Cannot query unknown URI " + uri);
         }
+        cursor.setNotificationUri(getContext().getContentResolver(),uri);
         return cursor;
     }
 
@@ -106,6 +107,8 @@ public class PetContentProvider extends ContentProvider {
             Log.e(getClass().toString(), "Failed to insert row for " + uri);
             return null;
         }
+
+        getContext().getContentResolver().notifyChange(uri,null);
 
         // Return the new URI with the ID (of the newly inserted row) appended at the end
         return ContentUris.withAppendedId(uri, id);
@@ -174,9 +177,14 @@ public class PetContentProvider extends ContentProvider {
         // Otherwise, get writeable database to update the data
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
+
+        getContext().getContentResolver().notifyChange(uri,null);
+
         // Returns the number of database rows affected by the update statement
         return database.update(PetContract.PetEntry.TABLE_NAME, values, selection, selectionArgs);
     }
+
+
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
@@ -187,11 +195,13 @@ public class PetContentProvider extends ContentProvider {
         switch (match) {
             case PETS:
                 // Delete all rows that match the selection and selection args
+                getContext().getContentResolver().notifyChange(uri,null);
                 return database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
             case PET_ID:
                 // Delete a single row given by the ID in the URI
                 selection = PetContract.PetEntry._ID + "=?";
                 selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                getContext().getContentResolver().notifyChange(uri,null);
                 return database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
             default:
                 throw new IllegalArgumentException("Deletion is not supported for " + uri);

@@ -1,47 +1,36 @@
 package com.parth.petsdatabase;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.CursorLoader;
-import androidx.loader.content.Loader;
-
+import android.app.LoaderManager;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.loader.content.CursorLoader;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.parth.petsdatabase.Data.PetContract;
-import com.parth.petsdatabase.Data.PetDatabaseOpenHelper;
 
-public class CatalogActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class CatalogActivity extends AppCompatActivity{
 
-    PetDatabaseOpenHelper mDbHelper;
+    private static final int PET_LOADER = 0;
     private  PetsCursorAdapter petsCursorAdapter;
     private Cursor cursor;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_catalog);
-        FloatingActionButton floatingActionButton = findViewById(R.id.catalog_floatingBtn);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(CatalogActivity.this,EditorActivity.class));
-            }
-        });
 
+    private void SetAdapterToCatalogActivity(){
         //attaching cursor adapter to the list view
         // Find ListView to populate
         ListView lvItems = (ListView) findViewById(R.id.lv_items);
@@ -61,16 +50,43 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
                 null,
                 null);
 
-        PetsCursorAdapter petsCursorAdapter = new PetsCursorAdapter(this,null);
+        PetsCursorAdapter petsCursorAdapter = new PetsCursorAdapter(this,cursor);
         // Attach cursor adapter to the ListView
         lvItems.setAdapter(petsCursorAdapter);
-        getLoaderManager().initLoader(PET_LOADER, null, this);
+
+        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                // Create new intent to go to {@link EditorActivity}
+                Intent intent = new Intent(CatalogActivity.this, EditorActivity.class);
+
+                Uri currentPetUri = ContentUris.withAppendedId(PetContract.PetEntry.CONTENT_URI, id);
+
+                // Set the URI on the data field of the intent
+                intent.setData(currentPetUri);
+
+                // Launch the {@link EditorActivity} to display the data for the current pet.
+                startActivity(intent);
+            }
+        });
+
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_catalog);
+        FloatingActionButton floatingActionButton = findViewById(R.id.catalog_floatingBtn);
+        floatingActionButton.setOnClickListener(view -> startActivity(new Intent(CatalogActivity.this,EditorActivity.class)));
+
+        SetAdapterToCatalogActivity();
+
 
     }
 
     @Override
     protected void onStart() {
-        displayDatabaseInfo();
+        SetAdapterToCatalogActivity();
         super.onStart();
     }
 
@@ -97,7 +113,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         TextView displayView = (TextView) findViewById(R.id.text_view_pet);
         try {
 
-            displayView.setText("The pets table contains " + cursor.getCount() + " pets.\n\n");
+            displayView.setText("The pets table contains " + Integer.toString(cursor.getCount()).toString() + " pets.\n\n");
             displayView.append(PetContract.PetEntry._ID + " - " +
                     PetContract.PetEntry.COLUMN_PET_NAME + " - " +
                     PetContract.PetEntry.COLUMN_PET_BREED + " - " +
@@ -136,10 +152,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     }
 
     //impleting the method to insert the dummy pet in the database
-    private void insertPet() {
-        // Gets the database in write mode
-        SQLiteDatabase db = mDbHelper.getWritableDatabase();
-
+    private void insertDummyPet() {
         // Create a ContentValues object where column names are the keys,
         // and Toto's pet attributes are the values.
         ContentValues values = new ContentValues();
@@ -148,7 +161,8 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         values.put(PetContract.PetEntry.COLUMN_PET_GENDER, PetContract.PetEntry.GENDER_MALE);
         values.put(PetContract.PetEntry.COLUMN_PET_WEIGHT, 7);
 
-        Uri newUri = getContentResolver().insert(PetContract.PetEntry.CONTENT_URI, values);
+        //inserting the content values to the CONTENT_URI by calling the content resolver
+        getContentResolver().insert(PetContract.PetEntry.CONTENT_URI, values);
     }
 
 
@@ -160,8 +174,8 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     }
 
     private void deleteAllPets() {
-        int rowsDeleted = getContentResolver().delete(PetContract.PetEntry.CONTENT_URI, null, null);
-        Toast.makeText(CatalogActivity.this,"Deleted the table",Toast.LENGTH_SHORT).show();
+        getContentResolver().delete(PetContract.PetEntry.CONTENT_URI, null, null);
+        Toast.makeText(CatalogActivity.this,"Deleted all records in the table",Toast.LENGTH_SHORT).show();
     }
 
     //implementing options items selected
@@ -169,42 +183,18 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case R.id.catalog_item_1:
-                 insertPet();
-                 displayDatabaseInfo();
+                 insertDummyPet();
+                 SetAdapterToCatalogActivity();
                  Toast.makeText(this,"added dummy data",Toast.LENGTH_SHORT).show();
+                 break;
             case R.id.catalog_itme_2:
                 deleteAllPets();
+                SetAdapterToCatalogActivity();
             default:
         }
         return super.onOptionsItemSelected(item);
     }
 
-    @NonNull
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        // Define a projection that specifies the columns from the table we care about.
-        String[] projection = {
-                PetContract.PetEntry._ID,
-                PetContract.PetEntry.COLUMN_PET_NAME,
-                PetContract.PetEntry.COLUMN_PET_BREED };
 
-        // This loader will execute the ContentProvider's query method on a background thread
-        return new CursorLoader(this,   // Parent activity context
-                PetContract.PetEntry.CONTENT_URI,   // Provider content URI to query
-                projection,             // Columns to include in the resulting Cursor
-                null,                   // No selection clause
-                null,                   // No selection arguments
-                null);                  // Default sort order
-    }
 
-    @Override
-    public void onLoadFinished(@NonNull  Loader<Cursor> loader, Cursor data) {
-        petsCursorAdapter.swapCursor(data);
-
-    }
-
-    @Override
-    public void onLoaderReset(@NonNull  Loader<Cursor> loader) {
-        petsCursorAdapter.swapCursor(null);
-    }
 }

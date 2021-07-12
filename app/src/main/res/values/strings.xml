@@ -3,5 +3,7 @@
     <string name="gender_unknown">Unknown</string>
     <string name="gender_male">Male</string>
     <string name="gender_female">Female</string>
+    <string name="empty_view_title_text">It\'s a bit lonely here...</string>
+
 
 </resources>
