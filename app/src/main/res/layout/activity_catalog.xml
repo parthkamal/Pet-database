@@ -8,6 +8,18 @@
     tools:context=".CatalogActivity">
 
 
+    <ListView
+        android:id="@+id/lv_items"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true">
+
+    </ListView>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/catalog_floatingBtn"
         android:layout_width="match_parent"
@@ -28,11 +40,9 @@
         android:id="@+id/text_view_pet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginLeft="10dp"
+        android:layout_below="@id/lv_items"
+        android:layout_alignParentBottom="true"
         android:layout_marginTop="10dp"
         android:textColor="@android:color/black" />
+
 </RelativeLayout>
